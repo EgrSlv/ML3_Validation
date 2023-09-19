@@ -264,9 +264,6 @@ Will detect overfitted models and regularize these. And dive more deeply with na
    4. Import optuna and configure the same experiment with ElasticNet.
    5. Estimate metrics and compare these approaches.
    6. Run optuna on one of the cross validation schemes
-8. Addition task
-   1. Try to find monotonic relationship features with target value. You may use regression models.
-   2. Import additional packages such as pdp iceplots, lime. Draw feature interpretations plots and try to find logic/unlogic relationships. 
 
 ### Submission
 
