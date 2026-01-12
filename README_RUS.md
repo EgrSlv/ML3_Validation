@@ -1,206 +1,206 @@
 # Model quality estimation
 
-Summary: This project discusses different validation techniques. We will discuss how to correctly measure model quality and avoid leaks. We also consider several ways to optimize model hyperparameters and various methods of feature selection.
+Краткое содержание: В этом проекте рассматриваются различные методы валидации. Мы обсудим, как правильно измерять качество модели и избегать утечек данных. Мы также рассмотрим несколько способов оптимизации гиперпараметров модели и различные методы отбора признаков.  
 
-💡 [Tap here](https://new.oprosso.net/p/4cb31ec3f47a4596bc758ea1861fb624) **to leave your feedback on the project**. It's anonymous and will help our team make your educational experience better. We recommend completing the survey immediately after the project.
+💡 [Нажмите здесь](https://new.oprosso.net/p/4cb31ec3f47a4596bc758ea1861fb624) **чтобы оставить свой отзыв о проекте**. Это анонимно и поможет нашей команде улучшить ваш образовательный опыт. Мы рекомендуем пройти опрос сразу после завершения проекта.  
 
-## Contents
+## Содержание
 
-1. [Chapter I. Preamble](#chapter-i-preamble)
-2. [Chapter II. Introduction](#chapter-ii-introduction) \
-    2.1. [One fold validation](#one-fold-validation) \
-    2.2. [Cross-validation (N folds validation)](#cross-validation-n-folds-validation) \
-    2.3. [Hyperparameter optimization](#hyperparameter-optimization) \
-    2.4. [Feature selection](#feature-selection)
-3. [Chapter III. Goal](#chapter-iii-goal) 
-4. [Chapter IV. Instructions](#chapter-iv-instructions)
-5. [Chapter V. Task](#chapter-v-task)
+1. [Глава I. Введение](#chapter-i-preamble)  
+2. [Глава II. Введение](#chapter-ii-introduction)  
+2.1. [Однократная валидация](#one-fold-validation)  
+2.2. [Перекрестная валидация (N-кратная валидация)](#cross-validation-n-folds-validation)  
+2.3. [Оптимизация гиперпараметров](#hyperparameter-optimization)  
+2.4. [Выбор признаков](#feature-selection)  
+3. [Глава III. Цель](#chapter-iii-goal)  
+4. [Глава IV. Инструкции](#chapter-iv-instructions)  
+5. [Глава V. Задача](#chapter-v-task)  
 
-## Chapter I. Preamble
+## Глава I. Введение
 
-In previous projects, we looked at many different examples of machine learning applications and dove into building linear regression models. But we always had prepared training and test samples. In this project, we will discuss how to split the dataset into parts in order to fit the models correctly.
+В предыдущих проектах мы рассмотрели множество различных примеров применения машинного обучения и углубились в построение моделей линейной регрессии. Но мы всегда готовили обучающие и тестовые выборки. В этом проекте мы обсудим, как разделить набор данных на части, чтобы правильно построить модели.
 
-The validation process is probably one of the most difficult and important parts of the modeling pipeline. Look at a few examples: let's imagine that you are a huge food retail company. And from the beginning of summer, you have the task of forecasting ice cream sales for the next 3 months. You have collected data from the last half of the year. You use the last three available months for the test set. But 3 summer months, which we cannot currently observe, 3 spring months, and 3 winter months from the available data will have different natures. Everyone knows that ice cream sales decrease in cold months.
+Процесс валидации, вероятно, является одной из самых сложных и важных частей процесса моделирования. Рассмотрим несколько примеров: представим, что вы — крупная компания розничной торговли продуктами питания. И с начала лета перед вами стоит задача прогнозирования продаж мороженого на следующие 3 месяца. Вы собрали данные за последнее полугодие. В качестве тестового набора вы используете данные за последние три доступных месяца. Но 3 летних месяца, которые мы сейчас не можем наблюдать, 3 весенних месяца и 3 зимних месяца из имеющихся данных будут иметь разный характер. Всем известно, что продажи мороженого снижаются в холодные месяцы.
 
-Let's consider a more complex example. We need to predict loan defaults in a bank. This is a common task in practice. If we group our training and test samples in this task by an identifier of the loan application, we will make a big mistake. Why is that? A customer might ask the bank for a loan more than once. And it could happen that a customer's loan from 2020 will be in the training part, while the same customer's loan from 2018 will be in the test part. This means that the trained model will already know that the client has repaid the loan from 2018. Of course, this knowledge isn't built directly into the model, but it's very likely that this information is stored in features. This allows the model to learn misleading patterns and leads to underfitting. 
-This situation is commonly referred to as information leakage.
+Рассмотрим более сложный пример. Нам нужно предсказать количество неплатежей по кредитам в банке. Это распространенная задача на практике. Если мы сгруппируем обучающие и тестовые выборки в этой задаче по идентификатору заявки на кредит, мы допустим большую ошибку. Почему? Клиент может обращаться в банк за кредитом несколько раз. И может случиться так, что кредит клиента за 2020 год окажется в обучающей выборке, а кредит того же клиента за 2018 год — в тестовой. Это означает, что обученная модель уже будет знать, что клиент погасил кредит в 2018 году. Конечно, это знание не заложено непосредственно в модель, но весьма вероятно, что эта информация хранится в признаках. Это позволяет модели усваивать вводящие в заблуждение закономерности и приводит к недообучению.
+Такая ситуация обычно называется утечкой информации.
 
-And that is not all. Remember that in the previous project we selected special features for our models? What if we want to try different possible subsets and choose the best one that does not contain redundant features? Or you may also notice that when we add regularization to the loss, it contains the weight that we multiply on. This weight also affects the performance of the model. So how should we optimize it? Spoiler, for such needs we should also split our dataset into the validation part, i.e. into training, valid and test parts.
+И это еще не все. Помните, что в предыдущем проекте мы выбирали специальные признаки для наших моделей? Что, если мы хотим попробовать разные возможные подмножества и выбрать лучшее, которое не содержит избыточных признаков? Или вы могли заметить, что при добавлении регуляризации к функции потерь она включает в себя вес, на который мы умножаем. Этот вес также влияет на производительность модели. Так как же нам ее оптимизировать? Спойлер: для таких целей нам также следует разделить наш набор данных на валидационную часть, то есть на обучающую, валидную и тестовую части.
 
-So the main goal for the validation process is to find the best way to wrap the training and testing process in such a way that it doesn't add any errors to the model while it's working in production. Let's look at validation techniques.
+Таким образом, главная цель процесса валидации — найти наилучший способ организации процессов обучения и тестирования таким образом, чтобы они не вносили ошибок в модель во время её работы в производственной среде. Давайте рассмотрим методы валидации.
 
-## Chapter II. Introduction
+## Глава II. Введение
 
-### One fold validation
+### Однократная валидация
 
-It is a clear idea to split our data into two parts — training and test set. But there are many ways to do it. The first and simplest way is a random split by some identifier with a fixed ratio of train/test set. For example, a random split by the index of the sample dataset or by the user's identifier that corresponds to a single sample in our dataset. It is a widely used method for those cases when you have a lot of data and **data have no time relationship**. In this case, the test part is often called out-of-fold. Fold here is the synonym for "part of the dataset". So "out-of-fold" means that we check the performance on the samples that are not from the part we use for training.
+Разделение данных на две части — обучающую и тестовую — кажется очевидной идеей. Но существует множество способов это сделать. Первый и самый простой способ — это случайное разделение по некоторому идентификатору с фиксированным соотношением обучающей и тестовой выборок. Например, случайное разделение по индексу набора данных образцов или по идентификатору пользователя, соответствующему отдельному образцу в нашем наборе данных. Это широко используемый метод в случаях, когда у вас много данных и **данные не имеют временной зависимости**. В этом случае тестовая часть часто называется внекорневой (out-of-fold). Здесь «корневая» — синоним «части набора данных». Таким образом, «внекорневая» означает, что мы проверяем производительность на образцах, которые не входят в часть, используемую для обучения.
 
-The second way to split the dataset into 2 samples is to sort our data by time or date and take some of the last period as a test. Be careful with the above example. Obviously, this method could be used if you have time relationships in the data. In this case, our splitting method is called out-of-time.
+Второй способ разделить набор данных на две выборки — отсортировать данные по времени или дате и взять какой-нибудь из последних периодов в качестве тестового. Будьте осторожны с приведенным выше примером. Очевидно, этот метод можно использовать, если в данных присутствуют временные зависимости. В этом случае наш метод разделения называется «вне времени».
 
-In practice, two folds — training and testing — are not enough. Later in this chapter, we will consider parts of the modeling pipeline, such as feature selection and hyperparameter optimization, that require a special fold for model quality estimation, and this set is called the validation set. It could be a fold that we create from the train using an out-of-fold or out-of-time strategy. Important that:
-* On the training part of the dataset we train our model.
-* On the validation part of the dataset, we measure the quality of the trained model and tune its performance by varying different conditions of the preprocessed data or by varying the hyperparameters of the model.
-* On the test part of the dataset, we measure the final quality of our model to understand the real profit of our model.
+На практике двух фолдов — обучающего и тестового — недостаточно. Далее в этой главе мы рассмотрим части конвейера моделирования, такие как выбор признаков и оптимизация гиперпараметров, которые требуют специального фолда для оценки качества модели, и этот набор называется валидационным набором. Это может быть фолд, созданный из обучающего набора с использованием стратегии внефолда или вне времени. Важно отметить, что:
+* На обучающей части набора данных мы обучаем нашу модель.
+* На валидационной части набора данных мы измеряем качество обученной модели и настраиваем ее производительность, изменяя различные условия предварительно обработанных данных или изменяя гиперпараметры модели.
+* На тестовой части набора данных мы измеряем конечное качество нашей модели, чтобы понять реальную пользу от нашей модели.
 
-So, you cannot use test data in the modeling pipeline except for the final metric measurement.
+Таким образом, вы не можете использовать тестовые данные в процессе моделирования, за исключением конечного измерения метрики.
 
-Below we visualize the splitting process into training, validation and test. 
+Ниже мы визуализируем процесс разделения на обучающую, валидационную и тестовую выборки.
 
 ![Classic approach](misc/images/classic_approach.png)
 
-Classic approach
+Классический подход
 
 ![Out-of-time for test part](misc/images/out_of_time_for_test_part.png)
 
-Out-of-time for test part
+Не хватило времени на выполнение тестовой части.
 
 ![Out-of-time both for test and valid parts](misc/images/out_of_time_both_and_valid_parts.png)
 
-Out-of-time both for test and valid parts
+Пропуск времени как для тестовых, так и для действительных частей.
 
-Source: https://muse.union.edu/dvorakt/train-validate-and-test-with-time-series/
+Источник: https://muse.union.edu/dvorakt/train-validate-and-test-with-time-series/
 
-As we see above, we could combine these methods. But what if we do not have that much data to model, how do we avoid overfitting?
+Как мы видим выше, мы можем комбинировать эти методы. Но что делать, если у нас не так много данных для моделирования, как избежать переобучения?
 
-### Cross-validation (N Fold Validation)
+### Перекрестная проверка (N-кратная проверка)
 
-In practice, we could find many problems where we cannot collect much data for model training, for example medical problems where data collection is expensive and complex. 
+На практике мы можем столкнуться со многими проблемами, где нам не удается собрать достаточно данных для обучения модели, например, с медицинскими проблемами, где сбор данных является дорогостоящим и сложным процессом.
 
-For these cases, we could use a cross-validation scheme. First, we split our data into N folds. Second, we take the first fold and use it as the test part, while we use the other folds to train our model. Then we repeat this process for the next fold, and so on. Finally, we need to collect metrics from all the folds and take an average to evaluate the model performance. The most common number of folds is in the range of 3 to 10. 
+В таких случаях можно использовать схему перекрестной проверки. Сначала мы разбиваем данные на N частей (фолдов). Затем берем первую часть и используем ее в качестве тестовой, а остальные части используем для обучения модели. После этого повторяем этот процесс для следующей части и так далее. Наконец, необходимо собрать метрики со всех частей и вычислить среднее значение для оценки производительности модели. Наиболее распространенное количество частей находится в диапазоне от 3 до 10.
 
-See the figure below for a deeper understanding:
+Для более подробного понимания см. рисунок ниже:
 
 ![Cross-validation](misc/images/grid_search_cross_validation.png)
 
-Source: https://scikit-learn.org/stable/modules/cross_validation.html
+Источник: https://scikit-learn.org/stable/modules/cross_validation.html
 
-There is a special case of cross-validation called a leave-one-out validation scheme. It will be a task for you — find definition for this scheme and give limitations and strong sides.
+Существует частный случай перекрестной проверки, называемый схемой проверки с исключением одного элемента. Вам предстоит найти определение этой схемы, а также указать ее ограничения и сильные стороны.
 
-In sklearn, there are several special methods for cross-validation: K-fold, grouped K-fold, stratified K-fold and TimeSeriesSplit. Let's dive into them to understand the differences.
+В библиотеке sklearn существует несколько специальных методов перекрестной проверки: K-fold, grouped K-fold, stratified K-fold и TimeSeriesSplit. Давайте рассмотрим их подробнее, чтобы понять различия.
 
 ![K-Fold](misc/images/k_fold.png)
 
-**K-Fold** repeats what we described above. Blue is the training set and red is the test. To get the performance, we train and evaluate our model on 4 different splits and then take the average score. Alternatively, for each red piece we can remember the prediction of the corresponding model. If we combine these predictions we get the vector called out-of-fold predictions. Thus, we can compute our performance metric by passing out-of-fold predictions and true labels to the function. 
+**K-Fold** Повторяется описанное выше. Синий цвет обозначает обучающий набор данных, а красный — тестовый. Для оценки производительности мы обучаем и оцениваем нашу модель на 4 различных разбиениях, а затем берем средний балл. В качестве альтернативы, для каждого красного фрагмента мы можем запомнить предсказание соответствующей модели. Если мы объединим эти предсказания, мы получим вектор, называемый внефлоуд-предсказаниями. Таким образом, мы можем вычислить нашу метрику производительности, передав внефлоуд-предсказания и истинные метки в функцию.
 
-Why do we mention this alternative? Because out-of-fold may be useful for improving model performance, but this topic is beyond the scope of this project. If you want to dive deeper, read about stacking.
+Почему мы упоминаем эту альтернативу? Потому что метод out-of-fold может быть полезен для повышения производительности модели, но эта тема выходит за рамки данного проекта. Если вы хотите углубиться в тему, почитайте о методе stacking.
 
-The K-Fold method has a strong weakness when the data has observations of a common group. The group here can be any important property that you think the data should be split into. It could be observations from a customer at different times, or IDs from different aircraft where you need to detect breaks. In these cases, we need to split train-test samples into parts in such a way that a client/airplane will only be in train or test sample — it couldn't be intersections for client ID in train and test sets. 
+Метод K-кратного разбиения имеет существенный недостаток, когда данные содержат наблюдения общей группы. В данном случае группой может быть любое важное свойство, на которое, по вашему мнению, следует разделить данные. Это могут быть наблюдения за клиентом в разное время или идентификаторы разных самолетов, где необходимо выявить разрывы. В таких случаях необходимо разделить обучающую и тестовую выборки на части таким образом, чтобы клиент/самолет присутствовал только в обучающей или тестовой выборке — это не могут быть пересечения идентификаторов клиентов в обучающей и тестовой выборках.
 
-This method is called **Group K-Fold**. As before, we split our sample into K-Folds, but we also grouped it by special parameter. Below you can see the visualization for group K-Fold by "group" column.
+Этот метод называется **Групповая K-кратная дифференциация**. Как и прежде, мы разделили нашу выборку на K-кратные дифференциации, но также сгруппировали её по специальному параметру. Ниже вы можете увидеть визуализацию групповой K-кратной дифференциации по столбцу "группа".
 
 ![Group-K-Fold](misc/images/group_k_fold.png)
 
-There are a few more interesting and important branches for cross-validation schemes. They are called **Stratified K-Fold** and **Stratified Group K-Fold**. It is a task for you to give some examples where we need to stratify the target variables by the folds. Give us strong and weak sides of these methods.
+Существует еще несколько интересных и важных направлений в схемах перекрестной проверки. Они называются **стратифицированная K-кратная проверка** и **стратифицированная групповая K-кратная проверка**. Ваша задача — привести несколько примеров, где необходимо стратифицировать целевые переменные по фолдам. Опишите сильные и слабые стороны этих методов.
 
-Now we consider the last cross-validation scheme when data has a time relationship. It is called time series splitting. First of all, we need to sort our data by date or specified timeline. Define k — it will be the number of splits.
+Теперь рассмотрим последнюю схему перекрестной проверки, когда данные имеют временную зависимость. Она называется разделением временных рядов. Прежде всего, нам нужно отсортировать наши данные по дате или указанному временному периоду. Определим k — это будет количество разделений.
 
 ![TimeSeriesSplit](misc/images/time_series_split.png)
 
-For the first model, we take 1/k of the data for the training sample and then 1/k for the test sample. For the second model, we expand the training sample to 2/k of the data and move the sliding window to the next 1/k for the test. And so on. In this method, we train k-1 models instead of k models.
+Для первой модели мы берем 1/k данных для обучающей выборки, а затем 1/k для тестовой выборки. Для второй модели мы расширяем обучающую выборку до 2/k данных и перемещаем скользящее окно на следующий 1/k для тестовой выборки. И так далее. В этом методе мы обучаем k-1 моделей вместо k моделей.
 
-### Hyperparameter optimization
+### Оптимизация гиперпараметров
 
-In this part we would discuss hyperparameter optimization — it is the process of finding the best combination of model parameters for better performance and less overfitting. There are 2 types of model parameters — internal — model optimizes these parameters by itself during fitting, and external — which are not updated during fitting (we don't update them with gradient or any other way). Such external parameters are called hyperparameters, and here we will talk only about them. Try to give some examples for both types of parameters.
+В этой части мы обсудим оптимизацию гиперпараметров — процесс поиска наилучшей комбинации параметров модели для повышения производительности и уменьшения переобучения. Существует два типа параметров модели: внутренние — модель оптимизирует эти параметры самостоятельно во время подгонки, и внешние — которые не обновляются во время подгонки (мы не обновляем их с помощью градиента или каким-либо другим способом). Такие внешние параметры называются гиперпараметрами, и здесь мы будем говорить только о них. Попробуйте привести несколько примеров для обоих типов параметров.
 
-Hyperparameter optimization is a loop process. You change one or more model params, fit the model to the training set and measure the quality on the validation set, and if the metrics increase, you go on in that direction, and if they do not, you try to change them. 
+Оптимизация гиперпараметров — это циклический процесс. Вы изменяете один или несколько параметров модели, обучаете модель на обучающем наборе данных и измеряете качество на валидационном наборе данных. Если показатели улучшаются, вы продолжаете в этом направлении, а если нет, то пытаетесь их изменить.
 
-Sometimes clear logic will help you choose appropriate hyperparameters to optimize. For example, let's say we have polynomial regression as a base algorithm. And we have a large gap between the metrics on the train and the validation set. So we conclude that our model is overfitted. Clear logic suggests us to reduce the degree of polynomial features — the number of them is the hyperparameter in this case. But how to find an optimal set of 5 or 10 independent hyperparameters?
+Иногда здравый смысл помогает выбрать подходящие гиперпараметры для оптимизации. Например, предположим, что в качестве базового алгоритма используется полиномиальная регрессия. И мы видим большой разрыв между метриками на обучающем и валидационном наборах данных. Таким образом, мы делаем вывод, что наша модель переобучена. Здравый смысл подсказывает нам уменьшить количество полиномиальных признаков — в данном случае их число является гиперпараметром. Но как найти оптимальный набор из 5 или 10 независимых гиперпараметров?
 
-Unfortunately, there is almost nothing better than to check all meaningful combinations of hyperparameters. This method is called Grid Search. But it takes a lot of time. If we have a limited amount of time, we can use Randomized Grid Search. Understanding how they work is part of your assignment.
+К сожалению, практически нет ничего лучше, чем проверить все значимые комбинации гиперпараметров. Этот метод называется поиском по сетке. Но он занимает много времени. Если у нас ограниченное количество времени, мы можем использовать случайный поиск по сетке. Понимание принципов их работы является частью вашего задания.
 
-But both of these approaches have a weakness — they do not consider relationships in the parameters. If we fit 3 models with the same degree of polynomial features, vary other hyperparameters, and get poor performance? How likely is it that we should try a different degree? The idea that solves this is applied in the Bayesian optimization. 
+Однако у обоих этих подходов есть недостаток — они не учитывают взаимосвязи параметров. Если мы построим 3 модели с одинаковой степенью полиномиальных характеристик, изменим другие гиперпараметры и получим плохие результаты? Насколько вероятно, что нам следует попробовать другую степень? Идея, решающая эту проблему, применяется в байесовской оптимизации.
 
-There are two libraries in Python that implement the solution: hyperopt and optuna (optuna seems to be better). Explaining what math is under the hood of this approach is also part of your task.
+В Python есть две библиотеки, реализующие это решение: hyperopt и optuna (optuna кажется лучше). Объяснение математических основ этого подхода также входит в вашу задачу.
 
-### Feature selection
+### Выбор признаков
 
-The next important step in the modeling process, which can also be thought of as hyperparameter optimization, is feature selection. Often we have thousands of features from raw data sources, and we could also generate a huge amount of them. It is an obvious question how to find more important features that have signal and remove noisy and garbage columns. As a result, we can not only speed up the model, but also increase the performance. But how to do this?
+Следующий важный шаг в процессе моделирования, который также можно рассматривать как оптимизацию гиперпараметров, — это отбор признаков. Часто у нас есть тысячи признаков из исходных источников данных, и мы также можем генерировать их в огромном количестве. Очевиден вопрос, как найти наиболее важные признаки, обладающие сигналом, и удалить зашумленные и ненужные столбцы. В результате мы можем не только ускорить модель, но и повысить ее производительность. Но как это сделать?
 
-The same as with hyperparameters, we could brute force all possible combinations of features and find the optimum, but it will take too much time. Fortunately, compared to hyperparameter tuning, there are many approaches to feature selection. To understand them all, it is better to use some classification:
+Как и в случае с гиперпараметрами, мы могли бы перебрать все возможные комбинации признаков и найти оптимум, но это займет слишком много времени. К счастью, по сравнению с настройкой гиперпараметров существует множество подходов к выбору признаков. Чтобы понять их все, лучше использовать некоторую классификацию:
 
 ![Feature Selection Methods](misc/images/feature_selection_methods.png)
 
-Source: https://neptune.ai/blog/feature-selection-methods (this list is not complete and the classification may not be that perfect).
+Источник: https://neptune.ai/blog/feature-selection-methods (этот список неполный, и классификация может быть не совсем точной).
 
-The division between supervised and unsupervised is the same as in machine learning tasks. Understanding the difference between wrappers, filters, and embedded is your task in this project. Please make sure you are familiar with:
-* All unsupervised techniques;
-* All wrapper methods;
-* Filters:
-  * Pearson,
-  * Chi2;
-* Embedded: 
-  * Lasso,
-  * Ridge.
-* The following methods would fall somewhere between wrappers and filters, and are not shown in the figure above. But these methods are very recommended:
-  * **permutation importance**;
+Разделение на контролируемое и неконтролируемое обучение такое же, как и в задачах машинного обучения. Ваша задача в этом проекте — понять разницу между обертками, фильтрами и встраиванием. Пожалуйста, убедитесь, что вы знакомы со следующими методами:
+* Все методы неконтролируемого обучения;
+* Все методы оберток;
+* Фильтры:
+  * Пирсона,
+  * Хи-квадрат;
+* Встраивание:
+  * Лассо,
+  * Ридж.
+* Следующие методы находятся где-то между обертками и фильтрами и не показаны на рисунке выше. Но эти методы очень рекомендуются:
+  * **важность перестановок**;
   * **shap** — https://shap.readthedocs.io/en/latest/.
 
-The last thing we want to note before the practice is that both hyperparameter optimization and feature selection can be combined with cross-validation. It will help to make these processes fair and not to let models overfit.
+В заключение, перед началом практики, хотим отметить, что оптимизацию гиперпараметров и отбор признаков можно сочетать с перекрестной проверкой. Это поможет сделать эти процессы справедливыми и предотвратить переобучение моделей.
 
-## Chapter III. Goal
+## Глава III. Цель
 
-The goal of this task is to get a deep understanding of the schemes of validation, hyperparameter optimization, and feature selection. 
+Цель данного задания — получить глубокое понимание схем валидации, оптимизации гиперпараметров и отбора признаков.
 
-## Chapter IV. Instructions
+## Глава IV. Инструкции
 
-* This project will be evaluated by humans only. You are free to organize and name your files as you wish.
-* Here and further we use Python 3 as the only correct version of Python.
-* For training deep learning algorithms you can try [Google Colab](https://colab.research.google.com). It offers free kernels (Runtime) with GPU, which is faster than CPU for such tasks.
-* The standard does not apply to this project. However, you are asked to be clear and structured in your source code design.
-* Store the datasets in the data subfolder.
+* Этот проект будет оцениваться только людьми. Вы можете организовывать и называть файлы по своему усмотрению.
+* Здесь и в дальнейшем мы используем Python 3 как единственно правильную версию Python.
+* Для обучения алгоритмов глубокого обучения вы можете попробовать [Google Colab](https://colab.research.google.com). Он предлагает бесплатные ядра (среду выполнения) с GPU, которые быстрее, чем CPU, для таких задач.
+* Стандарт не применяется к этому проекту. Однако вас просят быть ясными и структурированными в проектировании исходного кода.
+* Сохраняйте наборы данных в подпапке data.
 
-## Chapter V. Task
+## Глава V. Задание
 
-We will continue our training with a problem from Kaggle.com. 
-In this chapter, we will implement all the validation schemes, some hyperparameter tuning methods, and feature selection methods described above. Measure quality metrics on training and test samples. Will detect overfitted models and regularize them. And dive deeper with native model estimation and comparison.
-1. Answer the questions from the introduction
-   1. What is leave-one-out? Provide limitations and strengths.
-   2. How do Grid Search, Randomized Grid Search, and Bayesian optimization work?
-   3. Explain classification of feature selection methods. Explain how Pearson and Chi2 work. Explain how Lasso works. Explain what permutation significance is. Become familiar with SHAP.
+Мы продолжим обучение на задаче с сайта Kaggle.com.
+В этой главе мы реализуем все описанные выше схемы валидации, некоторые методы настройки гиперпараметров и методы отбора признаков. Измерим метрики качества на обучающих и тестовых выборках. Выявим переобученные модели и выполним регуляризацию. И углубимся в изучение собственной оценки и сравнения моделей.  
+1. Ответьте на вопросы из введения.
+    1. Что такое метод «исключения одного элемента»? Укажите его ограничения и преимущества.
+    2. Как работают методы Grid Search, Randomized Grid Search и Bayesian optimization?
+    3. Объясните классификацию методов выбора признаков. Объясните, как работают коэффициенты Пирсона и Chi2. Объясните, как работает метод Lasso. Объясните, что такое значимость перестановок. Ознакомьтесь с SHAP.
 
-2. Introduction — do all the preprocessing from the previous lesson
-   1. Read all the data.
-   2. Preprocess the "Interest Level" feature.
-   3. Create features:  'Elevator', 'HardwoodFloors', 'CatsAllowed', 'DogsAllowed', 'Doorman', 'Dishwasher', 'NoFee', 'LaundryinBuilding', 'FitnessCenter', 'Pre-War', 'LaundryinUnit', 'RoofDeck', 'OutdoorSpace', 'DiningRoom', 'HighSpeedInternet', 'Balcony', 'SwimmingPool', 'LaundryInBuilding', 'NewConstruction', 'Terrace'.
+2. Введение — выполните всю предварительную обработку данных из предыдущего урока
+    1. Прочитайте все данные.
+    2. Предварительно обработайте признак «Уровень заинтересованности».
+    3. Создайте признаки: «Лифт», «Паркетные полы», «Разрешено содержание кошек», «Разрешено содержание собак», «Швейцар», «Посудомоечная машина», «Без платы», «Прачечная в здании», «Фитнес-центр», «Довоенный», «Прачечная в квартире», «Крыша», «Открытое пространство», «Столовая», «Высокоскоростной интернет», «Балкон», «Бассейн», «Прачечная в здании», «Новое строительство», «Терраса».
 
-3. Implement the next methods:
-   1. Split data into 2 parts randomly with parameter test_size (ratio from 0 to 1), return training and test samples.
-   2. Randomly split data into 3 parts with parameters validation_size and test_size, return train, validation and test samples.
-   3. Split data into 2 parts with parameter date_split, return train and test samples split by date_split param.
-   4. Split data into 3 parts with parameters validation_date and test_date, return train, validation and test samples split by input params.
-   5. Make split procedure determenistic. What does it mean?
+3. Реализуйте следующие методы:
+    1. Случайным образом разделите данные на 2 части с параметром test_size (отношение от 0 до 1), верните обучающую и тестовую выборки.
+    2. Случайным образом разделите данные на 3 части с параметрами validation_size и test_size, верните обучающую, валидационную и тестовую выборки.
+    3. Разделите данные на 2 части с параметром date_split, верните обучающую и тестовую выборки, разделенные по параметру date_split.
+    4. Разделите данные на 3 части с параметрами validation_date и test_date, верните обучающую, валидационную и тестовую выборки, разделенные по входным параметрам.
+    5. Сделайте процедуру разделения детерминированной. Что это значит?
 
-4. Implement the next cross-validation methods:
-   1. K-Fold, where k is the input parameter, returns a list of train and test indices. 
-   2. Grouped K-Fold, where k and group_field are input parameters, returns list of train and test indices. 
-   3. Stratified K-fold, where k and stratify_field are input parameters, returns list of train and test indices.
-   4. Time series split, where k and date_field are input parameters, returns list of train and test indices.
- 
-5. Cross-validation comparison
-   1. Apply all the validation methods implemented above to our dataset. To apply Stratified algorithm you should preprocess target.
-   2. Apply the appropriate methods from sklearn.
-   3. Compare the resulting feature distributions for the training part of the dataset between sklearn and your implementation.
-   4. Compare all validation schemes. Choose the best one. Explain your choice.
+4. Реализуйте следующие методы перекрестной проверки:
+    1. K-кратная проверка (K-Fold), где k — входной параметр, возвращает список индексов обучающей и тестовой выборок.
+    2. Группированная K-кратная проверка (Grouped K-Fold), где k и group_field — входные параметры, возвращает список индексов обучающей и тестовой выборок.
+    3. Стратифицированная K-кратная проверка (Stratified K-fold), где k и stratify_field — входные параметры, возвращает список индексов обучающей и тестовой выборок.
+    4. Разделение временных рядов (Time series split), где k и date_field — входные параметры, возвращает список индексов обучающей и тестовой выборок.
 
-6. Feature Selection
-   1. Fit a Lasso regression model with normalized features. Use your method for splitting samples into 3 parts by field created with 60/20/20 ratio — train/validation/test.
-   2. Sort features by weight coefficients from model, fit model to top 10 features and compare quality.
-   3. Implement method for simple feature selection by nan-ratio in feature and correlation. Apply this method to feature set and take top 10 features, refit model and measure quality.
-   4. Implement permutation importance method and take top 10 features, refit model and measure quality.
-   5. Import Shap and also refit model on top 10 features.
-   6. Compare the quality of these methods for different aspects — speed, metrics and stability.
+5. Сравнительный анализ перекрестной проверки
+    1. Примените все описанные выше методы проверки к нашему набору данных. Для применения алгоритма стратификации необходимо предварительно обработать целевые данные.
+    2. Примените соответствующие методы из библиотеки sklearn.
+    3. Сравните результирующие распределения признаков для обучающей части набора данных между sklearn и вашей реализацией.
+    4. Сравните все схемы проверки. Выберите лучшую. Объясните свой выбор.
 
-7. Hyperparameter optimization
-   1. Implement grid search and random search methods for alpha and l1_ratio for sklearn's ElasticNet model.
-   2. Find the best combination of model hyperparameters.
-   3. Fit the resulting model.
-   4. Import optuna and configure the same experiment with ElasticNet.
-   5. Estimate metrics and compare approaches.
-   6. Run optuna on one of the cross-validation schemes.
+6. Выбор признаков
+    1. Постройте модель регрессии Lasso с нормализованными признаками. Используйте свой метод разделения выборок на 3 части по полям, созданным в соотношении 60/20/20 — обучающая/валидационная/тестовая выборки.
+    2. Отсортируйте признаки по весовым коэффициентам модели, постройте модель на основе 10 лучших признаков и сравните их качество.
+    3. Реализуйте метод простого выбора признаков по соотношению NaN в признаках и корреляции. Примените этот метод к набору признаков, выберите 10 лучших признаков, перестройте модель и оцените качество.
+    4. Реализуйте метод пермутационной важности, выберите 10 лучших признаков, перестройте модель и оцените качество.
+    5. Импортируйте Shap и также перестройте модель на основе 10 лучших признаков.
+    6. Сравните качество этих методов по различным параметрам — скорости, метрикам и стабильности.
+
+7. Оптимизация гиперпараметров
+    1. Реализуйте методы поиска по сетке и случайного поиска для параметров alpha и l1_ratio для модели ElasticNet из библиотеки sklearn.
+    2. Найдите наилучшую комбинацию гиперпараметров модели.
+    3. Обучите полученную модель.
+    4. Импортируйте optuna и настройте тот же эксперимент с ElasticNet.
+    5. Оцените метрики и сравните подходы.
+    6. Запустите optuna на одной из схем перекрестной проверки.
 
 ### Submission
 
-Save your code in Python JupyterNotebook. Your peer will load it and compare it to the basic solution. Your code should contain answers to all mandatory questions. The additional task is up to you.
+Сохраните свой код в Python JupyterNotebook. Ваш коллега загрузит его и сравнит с базовым решением. Ваш код должен содержать ответы на все обязательные вопросы. Дополнительное задание — на ваше усмотрение.
 
 
->Please leave feedback on the project in the [feedback form.](https://forms.yandex.ru/cloud/646b46f7d046882ee5a0b173/) 
+Пожалуйста, оставьте свой отзыв о проекте в [форме обратной связи].(https://forms.yandex.ru/cloud/646b46f7d046882ee5a0b173/)
