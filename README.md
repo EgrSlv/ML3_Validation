@@ -6,13 +6,14 @@ Summary: This project discusses different validation techniques. We will discuss
 
 ## Contents
 
+
 1. [Chapter I. Preamble](#chapter-i-preamble)
-2. [Chapter II. Introduction](#chapter-ii-introduction) \
-    2.1. [One fold validation](#one-fold-validation) \
-    2.2. [Cross-validation (N folds validation)](#cross-validation-n-folds-validation) \
-    2.3. [Hyperparameter optimization](#hyperparameter-optimization) \
+2. [Chapter II. Introduction](#chapter-ii-introduction)
+    2.1. [One fold validation](#one-fold-validation)
+    2.2. [Cross-validation (N Fold Validation)](#cross-validation-n-fold-validation)
+    2.3. [Hyperparameter optimization](#hyperparameter-optimization)
     2.4. [Feature selection](#feature-selection)
-3. [Chapter III. Goal](#chapter-iii-goal) 
+3. [Chapter III. Goal](#chapter-iii-goal)
 4. [Chapter IV. Instructions](#chapter-iv-instructions)
 5. [Chapter V. Task](#chapter-v-task)
 
@@ -160,8 +161,7 @@ In this chapter, we will implement all the validation schemes, some hyperparamet
 
 2. Introduction — do all the preprocessing from the previous lesson
    1. Read all the data.
-   2. Preprocess the "Interest Level" feature.
-   3. Create features:  'Elevator', 'HardwoodFloors', 'CatsAllowed', 'DogsAllowed', 'Doorman', 'Dishwasher', 'NoFee', 'LaundryinBuilding', 'FitnessCenter', 'Pre-War', 'LaundryinUnit', 'RoofDeck', 'OutdoorSpace', 'DiningRoom', 'HighSpeedInternet', 'Balcony', 'SwimmingPool', 'LaundryInBuilding', 'NewConstruction', 'Terrace'.
+   2. Create features:  'Elevator', 'HardwoodFloors', 'CatsAllowed', 'DogsAllowed', 'Doorman', 'Dishwasher', 'NoFee', 'LaundryinBuilding', 'FitnessCenter', 'Pre-War', 'LaundryinUnit', 'RoofDeck', 'OutdoorSpace', 'DiningRoom', 'HighSpeedInternet', 'Balcony', 'SwimmingPool', 'LaundryInBuilding', 'NewConstruction', 'Terrace'.
 
 3. Implement the next methods:
    1. Split data into 2 parts randomly with parameter test_size (ratio from 0 to 1), return training and test samples.
